@@ -2,14 +2,20 @@ package com.amochalo;
 
 import com.amochalo.error.UserNotFoundException;
 import com.amochalo.error.UsersUnSupportedFieldPatchException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
+
 import static java.lang.Integer.parseInt;
 
 @RestController
@@ -18,8 +24,19 @@ public class UserController {
 
     private final UserRepository repository;
 
-    public UserController(UserRepository repository) {
+    private final ApplicationContext context;
+
+    private HashMap<String, Action> actionMap;
+
+    @Autowired
+    public UserController(UserRepository repository, ApplicationContext context) {
         this.repository = repository;
+        this.context = context;
+        Collection<Action> actionCollection = context.getBeansOfType(Action.class).values();
+        actionMap = new HashMap<>();
+        for (Action act : actionCollection) {
+            actionMap.put(act.getKey(), act);
+        }
     }
 
     private List<User> toList(final Iterable<User> iterable) throws NullPointerException {
@@ -98,9 +115,9 @@ public class UserController {
         if (idList != null) {
             for (Long id : idList) {
                 User tmpUser = repository.findById(id).get();
-                if(tmpUser != null)
-                    if(tmpUser.getValue() != null)
-                    selectedUser.add(tmpUser.getValue());
+                if (tmpUser != null)
+                    if (tmpUser.getValue() != null)
+                        selectedUser.add(tmpUser.getValue());
             }
         }
         if (selectedUser.size() == 0) {
@@ -112,27 +129,8 @@ public class UserController {
         return selectedUser;
     }
 
-    @PostMapping("/sum")
-    public Result summation(@RequestBody Long[] selectedId) {
-        Action action = new Summation();
-        return new Result(action.returnActionResult(getListofUser(selectedId)));
-    }
-
-    @PostMapping("/mean")
-    public Result mean(@RequestBody Long[] selectedId) {
-        Action action = new Mean();
-        return new Result(action.returnActionResult(getListofUser(selectedId)));
-    }
-
-    @PostMapping("/min")
-    public Result minimum(@RequestBody Long[] selectedId) {
-        Action action = new Minimum();
-        return new Result(action.returnActionResult(getListofUser(selectedId)));
-    }
-
-    @PostMapping("/max")
-    public Result maximum(@RequestBody Long[] selectedId) {
-        Action action = new Maximum();
-        return new Result(action.returnActionResult(getListofUser(selectedId)));
+    @PostMapping("/{action}")
+    public Result action(@PathVariable String action, @RequestBody Long[] selectedId) {
+        return new Result(actionMap.get(action).returnActionResult(getListofUser(selectedId)));
     }
 }

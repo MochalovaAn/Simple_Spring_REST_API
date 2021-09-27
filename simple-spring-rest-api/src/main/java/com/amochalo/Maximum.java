@@ -1,7 +1,10 @@
 package com.amochalo;
 
+import org.springframework.stereotype.Component;
+
 import java.util.ArrayList;
 
+@Component
 public class Maximum implements Action{
 
     @Override
@@ -13,5 +16,10 @@ public class Maximum implements Action{
 
         }
         return res;
+    }
+
+    @Override
+    public String getKey() {
+        return "max";
     }
 }

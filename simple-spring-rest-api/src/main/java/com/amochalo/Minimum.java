@@ -1,7 +1,10 @@
 package com.amochalo;
 
+import org.springframework.stereotype.Component;
+
 import java.util.ArrayList;
 
+@Component
 public class Minimum implements Action{
 
     @Override
@@ -12,5 +15,10 @@ public class Minimum implements Action{
                     res = value;
         }
         return res;
+    }
+
+    @Override
+    public String getKey() {
+        return "min";
     }
 }
